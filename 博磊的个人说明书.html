@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>博磊的个人说明书</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700;900&family=ZCOOL+KuaiLe&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='100 100'><text y='.9em' font-size='90'>📓</text></svg>">
+<style>
+:root {
+  --paper: #f5efe0;
+  --paper-dark: #ebe3d0;
+  --paper-card: #fdf9f0;
+  --ink: #4a3f35;
+  --ink-light: #7a6e60;
+  --accent: #c97b4a;
+  --accent-soft: #e8b896;
+  --olive: #7a8c5c;
+  --olive-soft: #b5c49a;
+  --blue: #6b8cae;
+  --blue-soft: #a8c0d4;
+  --rose: #c47a8a;
+  --tape: rgba(232, 184, 150, 0.55);
+  --tape-olive: rgba(181, 196, 154, 0.55);
+  --tape-blue: rgba(168, 192, 212, 0.55);
+  --shadow: 0 3px 12px rgba(74, 63, 53, 0.13);
+  --shadow-hover: 0 8px 24px rgba(74, 63, 53, 0.2);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  background: #3a3228;
+  color: var(--ink);
+  line-height: 1.8;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* 纸张颗粒 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== 书本容器 ========== */
+.book-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 2000px;
+  position: relative;
+  z-index: 1;
+}
+
+.book {
+  position: relative;
+  width: min(90vw, 1100px);
+  height: min(85vh, 720px);
+  transform-style: preserve-3d;
+}
+
+/* ========== 页面 spread ========== */
+.spread {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+  transform-style: preserve-3d;
+}
+
+.spread.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 左页翻出 */
+.spread.flipping-left .page-left {
+  animation: flipLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: right center;
+  z-index: 10;
+}
+
+.spread.flipping-right .page-right {
+  animation: flipRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: left center;
+  z-index: 10;
+}
+
+@keyframes flipLeft {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(-180deg); }
+}
+
+@keyframes flipRight {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(180deg); }
+}
+
+/* ========== 单页 ========== */
+.page {
+  flex: 1;
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-left {
+  border-radius: 8px 0 0 8px;
+  box-shadow: inset -15px 0 25px -15px rgba(74,63,53,0.2);
+  border-right: 1px solid rgba(74,63,53,0.1);
+}
+
+.page-right {
+  border-radius: 0 8px 8px 0;
+  box-shadow: inset 15px 0 25px -15px rgba(74,63,53,0.2);
+}
+
+/* 装订线 */
+.page-left::after, .page-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  pointer-events: none;
+}
+
+.page-left::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(74,63,53,0.08), transparent);
+}
+
+.page-right::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(74,63,53,0.08), transparent);
+}
+
+/* 页码 */
+.page-number {
+  position: absolute;
+  bottom: 16px;
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 0.85rem;
+  color: var(--ink-light);
+}
+
+.page-left .page-number { left: 36px; }
+.page-right .page-number { right: 36px; }
+
+/* 纸张纹理叠加 */
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ========== 封面 ========== */
+.cover-page {
+  background: linear-gradient(135deg, #e8dcc8 0%, #d4c4a8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.cover-img {
+  width: 85%;
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  transform: rotate(-1deg);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.cover-img img { width: 100%; border-radius: 4px; display: block; }
+
+.cover-title {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 2.4rem;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.cover-sub {
+  font-size: 0.95rem;
+  color: var(--ink-light);
+}
+
+.cover-avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--paper-card);
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  transform: rotate(2deg);
+}
+
+/* ========== 内容样式 ========== */
+.handwrite { font-family: 'Ma Shan Zheng', cursive; }
+.handwrite-fun { font-family: 'ZCOOL KuaiLe', cursive; }
+
+.page-title {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 1.8rem;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+
+.page-chapter {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 0.85rem;
+  color: var(--accent);
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.content-area::-webkit-scrollbar { width: 4px; }
+.content-area::-webkit-scrollbar-thumb { background: var(--paper-dark); border-radius: 2px; }
+
+/* 便签 */
+.sticky-note {
+  padding: 20px;
+  border-radius: 2px;
+  box-shadow: var(--shadow);
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.sticky-note.yellow { background: #fdf6d8; }
+.sticky-note.green { background: #e8f0dc; }
+.sticky-note.blue { background: #e0eaf2; }
+.sticky-note.pink { background: #f5e0e4; }
+
+.sticky-note h3 {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+}
+
+.sticky-note p { font-size: 0.88rem; line-height: 1.7; }
+
+/* 标签 */
+.tag-sticker {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  margin: 3px;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.tag-sticker:hover { transform: scale(1.05) rotate(-2deg); }
+.tag-sticker.orange { background: var(--accent-soft); }
+.tag-sticker.olive { background: var(--olive-soft); }
+.tag-sticker.blue { background: var(--blue-soft); }
+.tag-sticker.rose { background: #e0b0b8; }
+
+/* 胶带 */
+.tape {
+  position: absolute;
+  width: 80px;
+  height: 24px;
+  z-index: 2;
+}
+
+/* 警告框 */
+.warning-box {
+  background: #f5e0e4;
+  border: 2px dashed var(--rose);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+/* 目标列表 */
+.goal-list { list-style: none; }
+.goal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--paper-dark);
+}
+.goal-check {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.goal-check.checked { background: var(--accent); }
+.goal-check.checked::after { content: '✓'; color: white; font-size: 12px; }
+.goal-item span { font-size: 0.88rem; }
+
+/* 目录 */
+.toc-list { list-style: none; }
+.toc-list li {
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--paper-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.toc-list li:hover { padding-left: 8px; color: var(--accent); }
+.toc-num {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  color: var(--accent);
+  font-size: 0.9rem;
+  min-width: 30px;
+}
+.toc-label { font-size: 0.95rem; flex: 1; }
+.toc-page { font-size: 0.8rem; color: var(--ink-light); }
+
+/* 作品集卡片 */
+.project-card {
+  background: var(--paper-card);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  transition: all 0.3s;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--ink);
+  display: block;
+  position: relative;
+}
+.project-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+.project-card h4 {
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+.project-card p {
+  font-size: 0.8rem;
+  color: var(--ink-light);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.project-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--ink-light);
+}
+.project-lang {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ========== 翻页按钮 ========== */
+.nav-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(253, 249, 240, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  transition: all 0.2s;
+  z-index: 100;
+}
+
+.nav-btn:hover { background: var(--paper-card); transform: translateY(-50%) scale(1.1); }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.nav-prev { left: 20px; }
+.nav-next { right: 20px; }
+
+/* 页码指示器 */
+.page-indicator {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+
+.indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(253, 249, 240, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.indicator-dot.active {
+  background: var(--accent-soft);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* 提示 */
+.hint {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(253, 249, 240, 0.9);
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--ink-light);
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+/* 生活场景图 */
+.life-img {
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  display: block;
+  margin: 12px 0;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .book {
+    width: 95vw;
+    height: 88vh;
+  }
+  .page { padding: 24px 20px; }
+  .page-left { display: none; }
+  .spread.active .page-right {
+    border-radius: 8px;
+    flex: 1;
+  }
+  .cover-title { font-size: 1.8rem; }
+  .page-title { font-size: 1.4rem; }
+  .nav-btn { width: 40px; height: 40px; }
+  .nav-prev { left: 8px; }
+  .nav-next { right: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hint" id="hint">点击左右箭头或按 ← → 键翻页</div>
+
+<div class="book-container">
+  <div class="book" id="book">
+
+    <!-- Spread 0: 封面 -->
+    <div class="spread active" data-index="0">
+      <div class="page page-left cover-page">
+        <div class="cover-img">
+          <img src="assets/hero-desk.jpg" alt="手账桌面">
+        </div>
+      </div>
+      <div class="page page-right cover-page">
+        <img class="cover-avatar" src="assets/avatar.jpg" alt="博磊">
+        <h1 class="cover-title">博磊的<br>个人说明书</h1>
+        <p class="cover-sub">一个想转行运营的医学生<br>美的布道者 · 生活家</p>
+        <p style="margin-top:30px;font-size:0.8rem;color:var(--ink-light);">→ 翻开看看</p>
+      </div>
+    </div>
+
+    <!-- Spread 1: 目录 -->
+    <div class="spread" data-index="1">
+      <div class="page page-left">
+        <div class="page-chapter">CONTENTS</div>
+        <h2 class="page-title">目录</h2>
+        <div class="content-area" style="margin-top:16px;">
+          <ul class="toc-list">
+            <li onclick="goToSpread(2)"><span class="toc-num">01</span><span class="toc-label">关于我</span><span class="toc-page">p.3</span></li>
+            <li onclick="goToSpread(3)"><span class="toc-num">02</span><span class="toc-label">工作风格</span><span class="toc-page">p.4</span></li>
+            <li onclick="goToSpread(3)"><span class="toc-num">03</span><span class="toc-label">沟通指南</span><span class="toc-page">p.4</span></li>
+            <li onclick="goToSpread(4)"><span class="toc-num">04</span><span class="toc-label">压力预警</span><span class="toc-page">p.5</span></li>
+            <li onclick="goToSpread(4)"><span class="toc-num">05</span><span class="toc-label">动力与价值观</span><span class="toc-page">p.5</span></li>
+            <li onclick="goToSpread(5)"><span class="toc-num">06</span><span class="toc-label">协作偏好</span><span class="toc-page">p.6</span></li>
+            <li onclick="goToSpread(5)"><span class="toc-num">07</span><span class="toc-label">成长目标</span><span class="toc-page">p.6</span></li>
+            <li onclick="goToSpread(6)"><span class="toc-num">08</span><span class="toc-label">我的作品集</span><span class="toc-page">p.7</span></li>
+          </ul>
+        </div>
+        <span class="page-number">— 1 —</span>
+      </div>
+      <div class="page page-right">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+          <div class="sticky-note yellow" style="transform:rotate(-2deg);max-width:280px;">
+            <h3 style="color:var(--accent);">使用说明</h3>
+            <p>这是一本关于我的手账。</p>
+            <p style="margin-top:8px;">左右翻页，慢慢读。</p>
+            <p style="margin-top:8px;">读完你就知道怎么跟我相处了。</p>
+          </div>
+        </div>
+        <span class="page-number">— 2 —</span>
+      </div>
+    </div>
+
+    <!-- Spread 2: 关于我 -->
+    <div class="spread" data-index="2">
+      <div class="page page-left">
+        <div class="page-chapter">Chapter 01</div>
+        <h2 class="page-title">关于我</h2>
+        <div class="content-area">
+          <div class="sticky-note green" style="transform:rotate(-1deg);">
+            <div class="tape" style="top:-10px;left:20px;background:var(--tape-olive);"></div>
+            <h3 style="color:var(--olive);">你好，我是博磊</h3>
+            <p>一名护理专业的医学生，目前在 ICU 实习中。</p>
+            <p style="margin-top:8px;">虽然穿着白大褂，但心里还住着一个想做互联网运营、市场营销和 AI Agent 的灵魂。</p>
+            <p style="margin-top:8px;">我相信美是可以被科普的，生活是可以被认真对待的。</p>
+          </div>
+          <div style="margin-top:16px;">
+            <span class="tag-sticker orange">美的布道者</span>
+            <span class="tag-sticker olive">医学生</span>
+            <span class="tag-sticker blue">生活家</span>
+          </div>
+        </div>
+        <span class="page-number">— 3 —</span>
+      </div>
+      <div class="page page-right">
+        <div class="page-chapter">TAGS</div>
+        <h2 class="page-title">三个标签的故事</h2>
+        <div class="content-area">
+          <div class="sticky-note yellow" style="transform:rotate(1deg);">
+            <h3 style="color:var(--accent);">美的布道者</h3>
+            <p>受够了千篇一律的古镇古街，希望通过 GitHub 项目做基础美学科普。</p>
+          </div>
+          <div class="sticky-note blue" style="transform:rotate(-0.8deg);">
+            <h3 style="color:var(--blue);">医学生</h3>
+            <p>护理专业，ICU 实习，见过凌晨的监护仪。</p>
+          </div>
+          <div class="sticky-note pink" style="transform:rotate(0.8deg);">
+            <h3 style="color:var(--rose);">生活家</h3>
+            <p>做饭、阅读、和朋友聊天散步，就觉得很幸福。</p>
+          </div>
+        </div>
+        <span class="page-number">— 4 —</span>
+      </div>
+    </div>
+
+    <!-- Spread 3: 工作风格 + 沟通指南 -->
+    <div class="spread" data-index="3">
+      <div class="page page-left">
+        <div class="page-chapter">Chapter 02</div>
+        <h2 class="page-title">工作风格</h2>
+        <div class="content-area">
+          <div class="sticky-note green" style="transform:rotate(-1deg);">
+            <h3 style="color:var(--olive);">我喜欢的方式</h3>
+            <p>边讨论边推进，不断迭代。</p>
+            <p style="margin-top:8px;">不喜欢一个人闷头想，喜欢在对话中碰撞出新的火花。</p>
+          </div>
+          <div class="sticky-note blue" style="transform:rotate(1deg);margin-top:16px;">
+            <h3 style="color:var(--blue);">我的拆解方法</h3>
+            <p><strong>第一步：</strong>从基本要素拆解，类似马克思原理。</p>
+            <p style="margin-top:6px;"><strong>第二步：</strong>逆向思维，站在用户角度想——如果我是用户，怎么更方便、快捷、丝滑？</p>
+          </div>
+        </div>
+        <span class="page-number">— 5 —</span>
+      </div>
+      <div class="page page-right">
+        <div class="page-chapter">Chapter 03</div>
+        <h2 class="page-title">沟通指南</h2>
+        <div class="content-area">
+          <div class="sticky-note green" style="transform:rotate(-0.8deg);">
+            <h3 style="color:var(--olive);">这样跟我说话最有效</h3>
+            <div style="margin-top:8px;">
+              <span class="tag-sticker olive">结论先行</span>
+              <span style="font-size:0.85rem;">金字塔原理，先说结论</span>
+            </div>
+            <div style="margin-top:8px;">
+              <span class="tag-sticker orange">带点温度</span>
+              <span style="font-size:0.85rem;">中国宝宝需要鼓励</span>
+            </div>
+          </div>
+          <div class="sticky-note pink" style="transform:rotate(0.8deg);margin-top:16px;">
+            <h3 style="color:var(--rose);">这样会让我不舒服</h3>
+            <div style="margin-top:8px;">
+              <span class="tag-sticker rose">高高在上</span>
+              <span style="font-size:0.85rem;">俯视的姿态说话</span>
+            </div>
+            <div style="margin-top:8px;">
+              <span class="tag-sticker rose">不顾感受</span>
+              <span style="font-size:0.85rem;">冰冷、没有人情味</span>
+            </div>
+          </div>
+        </div>
+        <span class="page-number">— 6 —</span>
+      </div>
+    </div>
+
+    <!-- Spread 4: 压力预警 + 动力价值观 -->
+    <div class="spread" data-index="4">
+      <div class="page page-left">
+        <div class="page-chapter">Chapter 04</div>
+        <h2 class="page-title">压力预警</h2>
+        <div class="content-area">
+          <div class="warning-box">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c47a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <h3 class="handwrite-fun" style="color:var(--rose);font-size:1.1rem;margin-bottom:12px;">当我出现这些信号</h3>
+            <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+              <span class="tag-sticker rose">话非常少</span>
+              <span class="tag-sticker rose">眼神呆滞</span>
+              <span class="tag-sticker rose">眼神闪躲</span>
+            </div>
+            <div class="sticky-note green" style="text-align:left;">
+              <p style="font-size:0.88rem;"><strong>这时候你可以：</strong>不用讲大道理，陪我聊聊天就已经是很大的帮助了。</p>
+            </div>
+          </div>
+        </div>
+        <span class="page-number">— 7 —</span>
+      </div>
+      <div class="page page-right">
+        <div class="page-chapter">Chapter 05</div>
+        <h2 class="page-title">动力与价值观</h2>
+        <div class="content-area">
+          <div class="sticky-note yellow" style="transform:rotate(-1deg);">
+            <h3 style="color:var(--accent);">让我眼睛发光的事</h3>
+            <ul style="list-style:none;font-size:0.88rem;margin-top:8px;">
+              <li style="padding:4px 0;">读有意思的文章</li>
+              <li style="padding:4px 0;">做有趣的项目</li>
+              <li style="padding:4px 0;">和人产生真实的链接</li>
+            </ul>
+          </div>
+          <div class="sticky-note pink" style="transform:rotate(1deg);margin-top:16px;">
+            <h3 style="color:var(--rose);">让我提不起劲的事</h3>
+            <ul style="list-style:none;font-size:0.88rem;margin-top:8px;">
+              <li style="padding:4px 0;">纯技术、没有人情味的事</li>
+              <li style="padding:4px 0;">琐碎、没有含金量的杂活</li>
+            </ul>
+          </div>
+          <div class="sticky-note green" style="margin-top:16px;text-align:center;">
+            <p style="font-size:0.9rem;">做选择最看重 <span class="tag-sticker orange" style="margin:0 4px;">意义感</span> 和 <span class="tag-sticker olive" style="margin:0 4px;">成长性</span></p>
+          </div>
+        </div>
+        <span class="page-number">— 8 —</span>
+      </div>
+    </div>
+
+    <!-- Spread 5: 协作偏好 + 成长目标 -->
+    <div class="spread" data-index="5">
+      <div class="page page-left">
+        <div class="page-chapter">Chapter 06</div>
+        <h2 class="page-title">协作偏好</h2>
+        <div class="content-area">
+          <div class="sticky-note green" style="transform:rotate(-1deg);">
+            <h3 style="color:var(--olive);">喜欢和这样的人合作</h3>
+            <div style="margin-top:8px;">
+              <span class="tag-sticker olive">有创造力</span>
+              <span class="tag-sticker orange">鼓励型</span>
+            </div>
+            <p style="font-size:0.85rem;margin-top:10px;">跟这样的人合作，会觉得"啊，真舒服！"</p>
+          </div>
+          <div class="sticky-note pink" style="transform:rotate(1deg);margin-top:16px;">
+            <h3 style="color:var(--rose);">比较难合作的类型</h3>
+            <div style="margin-top:8px;">
+              <span class="tag-sticker rose">高高在上</span>
+              <span class="tag-sticker rose">自大</span>
+              <span class="tag-sticker rose">PUA型</span>
+            </div>
+          </div>
+          <div class="sticky-note yellow" style="margin-top:16px;text-align:center;">
+            <p style="font-size:0.85rem;">虽然我比较内向，但如果有人主动找我，我会敞开聊的。</p>
+          </div>
+        </div>
+        <span class="page-number">— 9 —</span>
+      </div>
+      <div class="page page-right">
+        <div class="page-chapter">Chapter 07</div>
+        <h2 class="page-title">成长目标</h2>
+        <div class="content-area">
+          <div class="sticky-note yellow" style="transform:rotate(-0.8deg);">
+            <h3 style="color:var(--accent);">专业突破</h3>
+            <ul class="goal-list" style="margin-top:8px;">
+              <li class="goal-item"><div class="goal-check" onclick="this.classList.toggle('checked')"></div><span>互联网运营方向有所突破</span></li>
+              <li class="goal-item"><div class="goal-check" onclick="this.classList.toggle('checked')"></div><span>Agent 的应用能力提升</span></li>
+              <li class="goal-item"><div class="goal-check" onclick="this.classList.toggle('checked')"></div><span>市场营销技能积累</span></li>
+            </ul>
+          </div>
+          <div class="sticky-note green" style="transform:rotate(0.8deg);margin-top:16px;">
+            <h3 style="color:var(--olive);">生活成长</h3>
+            <ul class="goal-list" style="margin-top:8px;">
+              <li class="goal-item"><div class="goal-check" onclick="this.classList.toggle('checked')"></div><span>不断锻炼，成为"薄肌男孩"</span></li>
+              <li class="goal-item"><div class="goal-check" onclick="this.classList.toggle('checked')"></div><span>早睡早起，好好养生</span></li>
+            </ul>
+          </div>
+          <img class="life-img" src="assets/life-scenes.jpg" alt="生活场景" style="margin-top:16px;">
+        </div>
+        <span class="page-number">— 10 —</span>
+      </div>
+    </div>
+
+    <!-- Spread 6: 作品集 -->
+    <div class="spread" data-index="6">
+      <div class="page page-left">
+        <div class="page-chapter">Chapter 08</div>
+        <h2 class="page-title">我的作品集</h2>
+        <p style="font-size:0.85rem;color:var(--ink-light);margin-bottom:16px;">从 GitHub 精选的几个项目</p>
+        <div class="content-area">
+          <a class="project-card" href="https://github.com/tom61-bl/haosezhitu" target="_blank" style="transform:rotate(-0.5deg);">
+            <div class="tape" style="top:-8px;right:16px;background:var(--tape);"></div>
+            <h4>好色之徒 · Chromatic Atlas</h4>
+            <p>面向大众的互动色彩美学科普项目</p>
+            <div class="project-meta">
+              <span><span class="project-lang" style="background:#3178c6;"></span>TypeScript</span>
+              <span>github.com/tom61-bl</span>
+            </div>
+          </a>
+          <a class="project-card" href="https://github.com/tom61-bl/font-magazine-v1" target="_blank" style="transform:rotate(0.5deg);">
+            <h4>字研室 · Type Atlas</h4>
+            <p>面向大众的开源互动字体图谱，观察中文与英文字形如何改变语气、节奏与阅读感受</p>
+            <div class="project-meta">
+              <span><span class="project-lang" style="background:#3178c6;"></span>TypeScript</span>
+              <span>★ 2</span>
+            </div>
+          </a>
+          <a class="project-card" href="https://github.com/tom61-bl/html-projects" target="_blank" style="transform:rotate(-0.3deg);">
+            <h4>HTML Projects</h4>
+            <p>像素游戏、沟通训练器、明信片等 HTML 小项目集合（含金字塔沟通训练）</p>
+            <div class="project-meta">
+              <span><span class="project-lang" style="background:#e34c26;"></span>HTML</span>
+            </div>
+          </a>
+        </div>
+        <span class="page-number">— 11 —</span>
+      </div>
+      <div class="page page-right">
+        <div class="page-chapter">MORE WORKS</div>
+        <h2 class="page-title">更多项目</h2>
+        <div class="content-area">
+          <a class="project-card" href="https://github.com/tom61-bl/wonder-cards" target="_blank" style="transform:rotate(0.5deg);">
+            <h4>Wonder Cards</h4>
+            <p>精美卡片生成工具</p>
+            <div class="project-meta"><span><span class="project-lang" style="background:#e34c26;"></span>HTML</span></div>
+          </a>
+          <a class="project-card" href="https://github.com/tom61-bl/personal-radio" target="_blank" style="transform:rotate(-0.5deg);">
+            <h4>Personal Radio</h4>
+            <p>个人电台项目</p>
+            <div class="project-meta"><span><span class="project-lang" style="background:#f1e05a;"></span>JavaScript</span></div>
+          </a>
+          <a class="project-card" href="https://github.com/tom61-bl/scientific-thinking-15" target="_blank" style="transform:rotate(0.3deg);">
+            <h4>科学思维十五讲</h4>
+            <p>单文件交互式学习手册：结构化笔记 + 互动实验室 + Anki 复习卡片</p>
+            <div class="project-meta"><span><span class="project-lang" style="background:#e34c26;"></span>HTML</span></div>
+          </a>
+          <a class="project-card" href="https://github.com/tom61-bl?tab=repositories" target="_blank" style="transform:rotate(-0.3deg);text-align:center;background:var(--paper-dark);">
+            <h4 style="color:var(--accent);">查看全部 →</h4>
+            <p>github.com/tom61-bl</p>
+          </a>
+        </div>
+        <span class="page-number">— 12 —</span>
+      </div>
+    </div>
+
+    <!-- Spread 7: 封底 -->
+    <div class="spread" data-index="7">
+      <div class="page page-left cover-page">
+        <div style="text-align:center;">
+          <h2 class="handwrite" style="font-size:2rem;margin-bottom:16px;">谢谢你读到这里</h2>
+          <p style="font-size:0.95rem;color:var(--ink-light);">现在你知道怎么跟我相处了吧？</p>
+          <p style="font-size:0.95rem;color:var(--ink-light);margin-top:8px;">欢迎来找我聊天 :)</p>
+        </div>
+      </div>
+      <div class="page page-right cover-page">
+        <div class="sticky-note yellow" style="transform:rotate(-2deg);max-width:260px;text-align:center;">
+          <h3 style="color:var(--accent);">博磊</h3>
+          <p style="font-size:0.85rem;margin-top:8px;">美的布道者 · 医学生 · 生活家</p>
+          <p style="font-size:0.8rem;margin-top:12px;color:var(--ink-light);">github.com/tom61-bl</p>
+          <p style="font-size:0.75rem;margin-top:8px;color:var(--ink-light);">2026 · 用手账的方式记录自己</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 翻页按钮 -->
+<button class="nav-btn nav-prev" id="prevBtn" onclick="prevSpread()">‹</button>
+<button class="nav-btn nav-next" id="nextBtn" onclick="nextSpread()">›</button>
+
+<!-- 页码指示器 -->
+<div class="page-indicator" id="indicator"></div>
+
+<script>
+const spreads = document.querySelectorAll('.spread');
+const total = spreads.length;
+let current = 0;
+let isFlipping = false;
+
+// 初始化指示器
+const indicator = document.getElementById('indicator');
+for (let i = 0; i < total; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'indicator-dot' + (i === 0 ? ' active' : '');
+  dot.onclick = () => goToSpread(i);
+  indicator.appendChild(dot);
+}
+
+function updateUI() {
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+  document.querySelectorAll('.indicator-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === current);
+  });
+}
+
+function goToSpread(index) {
+  if (isFlipping || index === current || index < 0 || index >= total) return;
+  isFlipping = true;
+
+  const direction = index > current ? 'left' : 'right';
+  const currentSpread = spreads[current];
+  const nextSpread = spreads[index];
+
+  if (direction === 'left') {
+    currentSpread.classList.add('flipping-left');
+  } else {
+    currentSpread.classList.add('flipping-right');
+  }
+
+  setTimeout(() => {
+    currentSpread.classList.remove('active', 'flipping-left', 'flipping-right');
+    nextSpread.classList.add('active');
+    current = index;
+    updateUI();
+    isFlipping = false;
+  }, 750);
+}
+
+function nextSpread() { goToSpread(current + 1); }
+function prevSpread() { goToSpread(current - 1); }
+
+// 键盘导航
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSpread(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSpread(); }
+});
+
+// 触摸滑动
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) nextSpread(); else prevSpread();
+  }
+});
+
+// 隐藏提示
+setTimeout(() => {
+  const hint = document.getElementById('hint');
+  hint.style.transition = 'opacity 0.5s';
+  hint.style.opacity = '0';
+  setTimeout(() => hint.style.display = 'none', 500);
+}, 4000);
+
+updateUI();
+</script>
+</body>
+</html>
